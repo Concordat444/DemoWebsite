@@ -1,0 +1,19 @@
+﻿
+@for(int i = 0; i < rows; i++)
+{
+    <div class="row m-1">
+        @for(int j = 0; j < cols; j++)
+        {
+            <GridSquare xCoord="i" yCoord="j" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int rows { get; set; } = 0;
+    [Parameter]
+    public int cols { get; set; } = 0;
+
+
+}

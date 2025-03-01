@@ -1,0 +1,25 @@
+﻿<p class="d-inline" @bind-value="gridModel.Active" @bind-value:event="onclick">@gridModel.Active</p>
+<p class="d-inline">(@gridModel.XCoord,@gridModel.YCoord)</p>
+<div id="@gridModel.XCoord,@gridModel.YCoord" class="m-1 border-primary" style=@style @onclick="toggleActive">
+
+</div>
+
+@code {
+    [Parameter]
+    public GridModel gridModel { get; set; } = new(0,0,false,0);
+
+    private string baseStyle = "height: 20px; width: 20px;";
+    private string style = "height: 20px; width: 20px; background-color: gray;";
+
+    public void toggleActive(MouseEventArgs e)
+    {
+        gridModel.Active = !gridModel.Active;
+        updateStyle();
+    }
+    public void updateStyle()
+    {
+        style = baseStyle +
+        (gridModel.Active == true ? " background-color: black;"
+        : gridModel.Count == 0 ? " background-color: gray;" : " background-color: yellow;");
+    }
+}
