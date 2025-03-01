@@ -1,0 +1,194 @@
+﻿@page "/life"
+@using System.Timers
+
+<h3>LifeSim</h3>
+<div class="form-group">
+    <label>Rows: </label>
+    <input @bind-value="rowCount" @bind-value:event="oninput" disabled="@sizeNotEditable" />
+</div>
+<div class="mb-2">
+    <label>Cols: </label>
+    <input @bind-value="colCount" @bind-value:event="oninput" disabled="@sizeNotEditable" />
+</div>
+<div class="row m-1">
+    <btn class="btn btn-primary col-1 m-1" @onclick="createGrid" >Create Grid</btn>
+    <btn class="btn btn-primary col-1 m-1" @onclick="resizeGrid" >Resize Grid</btn>
+    <btn class="btn btn-primary col-1 m-1" @onclick="startSimulation" inert="@started" >Start Game</btn>
+    <btn class="btn btn-primary col-1 m-1" @onclick="stopSimulation" inert="@(!started)">Stop Game</btn>
+    <btn class="btn btn-primary col-1 m-1" @onclick="onStep" >Step Once</btn>
+    <btn class="btn btn-primary col-1 m-1" @onclick="executeChanges" >Undo Once</btn>
+</div>
+@if(rows != null)
+{
+    <div class="m-1">
+        @foreach (List<GridModel> row in rows)
+        {
+            <div class="row m-0">
+                @foreach(GridModel square in row)
+                {
+                    <div class="cell" style=@square.Style @onclick="@(() => toggleActive(square))"></div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    public List<List<GridModel>>? rows { get; set; }
+    public HashSet<GridModel>? activeCells { get; set; }
+    public HashSet<GridModel>? toChange { get; set; }
+
+    public int rowCount { get; set; } = 0;
+    public int colCount { get; set; } = 0;
+    public bool sizeNotEditable = false;
+    public bool started { get; set; } = false;
+
+    public System.Timers.Timer? timer { get; set; }
+
+    private void startSimulation()
+    {
+        onStep();
+        timer = new System.Timers.Timer(2000);
+        timer.Enabled = true;
+
+        timer.Elapsed += OnTimedEvent;
+        timer.AutoReset = true;
+    }
+    private void OnTimedEvent(Object source, ElapsedEventArgs e)
+    {
+        started = true;
+        onStep();
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+        Console.WriteLine("called timed event");
+
+    }
+    private void stopSimulation()
+    {
+        started = false;
+        timer.Enabled = false;
+        timer.Dispose();
+    }
+    void createGrid()
+    {
+        sizeNotEditable = true;
+        activeCells = new(rowCount * colCount);
+        toChange = new(rowCount * colCount);
+
+        rows = new List<List<GridModel>>(rowCount);
+        for(int i = 0; i < rowCount; i++)
+        {
+            List<GridModel> row = new(colCount);
+            rows.Add(row);
+            for(int j = 0; j < colCount; j++)
+            {
+                row.Add(new GridModel( i, j, false, 0));
+            }
+        }
+    }
+    void resizeGrid()
+    {
+        sizeNotEditable = false;
+        rows?.Clear();
+    }
+    void toggleActive(GridModel gm)
+    {
+        gm.Active = !gm.Active;
+        gm.UpdateStyles();
+        if(gm.Active)
+        {
+            activeCells.Add(gm);
+            incrementNeighbors(gm.XCoord, gm.YCoord);
+        } else
+        {
+            decrementNeighbors(gm.XCoord, gm.YCoord);
+        }
+    }
+    void incrementNeighbors(int x, int y)
+    {
+        for(int i = x-1; i < x+2; i++)
+        {
+            if(i < 0 || i > rows!.Count - 1)
+            {
+                continue;
+            } else
+            {
+                for(int j = y-1; j < y+2; j++)
+                {
+                    if(j < 0 || j > rows[i].Count - 1 || (j == y && i == x))
+                    {
+                        continue;
+                    } else
+                    {
+                        GridModel current = rows[i][j];
+                        current.Count++;
+                        current.UpdateStyles();
+                        activeCells.Add(current);
+                    }
+                }
+            }
+        }
+    }
+    void decrementNeighbors(int x, int y)
+    {
+        for(int i = x-1; i < x+2; i++)
+        {
+            if(i < 0 || i > rows!.Count - 1)
+            {
+                continue;
+            } else
+            {
+                for(int j = y-1; j < y+2; j++)
+                {
+                    if(j < 0 || j > rows[i].Count - 1 || (j == y && i == x))
+                    {
+                        continue;
+                    } else
+                    {
+                        GridModel current = rows[i][j];
+                        current.Count--;
+                        current.UpdateStyles();
+                        if(current.Count == 0 && !current.Active)
+                        {
+                            activeCells.Remove(current);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    void determineChanges()
+    {
+        foreach(GridModel square in activeCells)
+        {
+            if(square.Active)
+            {
+                if(square.Count < 2 || square.Count > 3)
+                {
+                    toChange.Add(square);
+                }
+            } else
+            {
+                if(square.Count == 3)
+                {
+                    toChange.Add(square);
+                }
+            }
+        }
+    }
+    void executeChanges()
+    {
+        foreach(GridModel square in toChange)
+        {
+            toggleActive(square);
+        }
+    }
+    void onStep()
+    {
+        toChange.Clear();
+        determineChanges();
+        executeChanges();
+    }
+}

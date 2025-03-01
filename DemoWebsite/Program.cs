@@ -35,6 +35,7 @@ app.MapDefaultControllerRoute();
 app.MapRazorPages();
 app.MapBlazorHub();
 app.MapFallbackToPage("/admin/{*catchall}", "/Admin/Index");
+app.MapFallbackToPage("/life/{*catchall}", "/Life/Index");
 
 SeedStoreData.EnsurePopulated(app);
 
