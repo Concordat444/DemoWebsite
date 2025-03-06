@@ -29,8 +29,6 @@
                     //                    Style = Count == 0 ? "height: 20px; width: 20px; background-color: gray;" : "height: 20px; width: 20px; background-color: yellow;";
                     Style = "height: 20px; width: 20px; background-color: gray;";
                     break;
-                default:
-                    break;
             }
         }
         //public string GenerateId()

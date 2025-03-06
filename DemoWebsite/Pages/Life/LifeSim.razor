@@ -51,7 +51,7 @@
         timer = new System.Timers.Timer(2000);
         timer.Enabled = true;
 
-        timer.Elapsed += OnTimedEvent;
+        timer.Elapsed += OnTimedEvent!;
         timer.AutoReset = true;
     }
     private void OnTimedEvent(Object source, ElapsedEventArgs e)
@@ -68,7 +68,7 @@
     private void stopSimulation()
     {
         started = false;
-        timer.Enabled = false;
+        timer!.Enabled = false;
         timer.Dispose();
     }
     void createGrid()
@@ -99,7 +99,7 @@
         gm.UpdateStyles();
         if(gm.Active)
         {
-            activeCells.Add(gm);
+            activeCells!.Add(gm);
             incrementNeighbors(gm.XCoord, gm.YCoord);
         } else
         {
@@ -125,7 +125,7 @@
                         GridModel current = rows[i][j];
                         current.Count++;
                         current.UpdateStyles();
-                        activeCells.Add(current);
+                        activeCells!.Add(current);
                     }
                 }
             }
@@ -152,7 +152,7 @@
                         current.UpdateStyles();
                         if(current.Count == 0 && !current.Active)
                         {
-                            activeCells.Remove(current);
+                            activeCells!.Remove(current);
                         }
                     }
                 }
@@ -161,33 +161,33 @@
     }
     void determineChanges()
     {
-        foreach(GridModel square in activeCells)
+        foreach(GridModel square in activeCells!)
         {
             if(square.Active)
             {
                 if(square.Count < 2 || square.Count > 3)
                 {
-                    toChange.Add(square);
+                    toChange!.Add(square);
                 }
             } else
             {
                 if(square.Count == 3)
                 {
-                    toChange.Add(square);
+                    toChange!.Add(square);
                 }
             }
         }
     }
     void executeChanges()
     {
-        foreach(GridModel square in toChange)
+        foreach(GridModel square in toChange!)
         {
             toggleActive(square);
         }
     }
     void onStep()
     {
-        toChange.Clear();
+        toChange!.Clear();
         determineChanges();
         executeChanges();
     }

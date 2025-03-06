@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using DemoWebsite.Models;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,10 +21,19 @@ builder.Services.AddScoped<Cart>(sp => SessionCart.GetCart(sp));
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddServerSideBlazor();
 
+builder.Services.AddDbContext<AppIdentityDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration["ConnectionStrings:IdentityConnection"]));
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppIdentityDbContext>();
+
 var app = builder.Build();
 
 app.UseStaticFiles();
 app.UseSession();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllerRoute("catpage", "{category}/Page{ProductPage:int}", new { Controller = "Home", Action = "Index" });
 app.MapControllerRoute("page", "Page{ProductPage:int}", new { Controller = "Home", Action = "Index", productPage = 1 });
@@ -38,5 +47,6 @@ app.MapFallbackToPage("/admin/{*catchall}", "/Admin/Index");
 app.MapFallbackToPage("/life/{*catchall}", "/Life/Index");
 
 SeedStoreData.EnsurePopulated(app);
+IdentitySeedData.EnsurePopulated(app);
 
 app.Run();
